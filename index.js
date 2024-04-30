@@ -10,7 +10,6 @@ app.use(bodyParser.json());
 
 dotenv.config("./.env");
 
-
 const corsOptions = {
   origin: "*",
 };
@@ -32,6 +31,14 @@ mongoose
   .catch((err) => {
     console.log("Error connecting to MongoDB Atlas", err);
   });
+
+const payHistorySchema = new mongoose.Schema({
+  payMonth: String,
+  payAmount: String,
+  paidDays: String,
+  paymentMode: String,
+  paidTo: String,
+});
 
 const mySchema = new mongoose.Schema({
   id: Number,
@@ -55,16 +62,7 @@ const mySchema = new mongoose.Schema({
   bikeRegistrationNumber: String,
   sharingRoom: String,
   isApprovedTNC: Boolean,
-  payHistory: [
-    {
-      paidDays: Number,
-      payMonth: String,
-      payAmount: Number,
-      paymentMode: String,
-      paidTo: String,
-      paidYear: String,
-    },
-  ],
+  payHistory: [payHistorySchema],
 });
 
 const MyModel = mongoose.model("inmates", mySchema);
