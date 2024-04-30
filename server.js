@@ -3,9 +3,12 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 mongoose.set("strictQuery", false);
+const dotenv = require('dotenv')
 
 const cors = require("cors");
 app.use(bodyParser.json());
+
+dotenv.config('./.env');
 
 // app.use(cors());
 
@@ -13,7 +16,8 @@ const corsOptions = {
   origin: "*",
 };
 app.use(cors(corsOptions));
-const port = "sahara-gblrbzz67-saqebkhans-projects.vercel.app";
+const port = process.env.PORT;
+// sahara-3nh78eyin-saqebkhans-projects.vercel.app
 const uri =
   "mongodb+srv://saqebk619:eGLSYh9EjwvJV8pV@cluster12.jdw95pj.mongodb.net/usersApp?retryWrites=true&w=majority";
 // const uri = 'mongodb+srv://<username>:<password>@<cluster-address>/<database-name>?retryWrites=true&w=majority';
@@ -122,5 +126,5 @@ app.delete("/inmates/:id", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("listening at 6000");
+  console.log("listening at " ,port);
 });
