@@ -38,6 +38,7 @@ const payHistorySchema = new mongoose.Schema({
   paidDays: String,
   paymentMode: String,
   paidTo: String,
+  paidYear: Number
 });
 
 const mySchema = new mongoose.Schema({
