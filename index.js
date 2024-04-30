@@ -3,12 +3,12 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 mongoose.set("strictQuery", false);
-const dotenv = require('dotenv')
+const dotenv = require("dotenv");
 
 const cors = require("cors");
 app.use(bodyParser.json());
 
-dotenv.config('./.env');
+dotenv.config("./.env");
 
 // app.use(cors());
 
@@ -126,5 +126,5 @@ app.delete("/inmates/:id", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("listening at " ,port);
+  console.log("listening at ", port);
 });
