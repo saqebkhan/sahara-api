@@ -13,7 +13,7 @@ const corsOptions = {
   origin: "*",
 };
 app.use(cors(corsOptions));
-const port = 2000;
+const port = "sahara-gblrbzz67-saqebkhans-projects.vercel.app";
 const uri =
   "mongodb+srv://saqebk619:eGLSYh9EjwvJV8pV@cluster12.jdw95pj.mongodb.net/usersApp?retryWrites=true&w=majority";
 // const uri = 'mongodb+srv://<username>:<password>@<cluster-address>/<database-name>?retryWrites=true&w=majority';
