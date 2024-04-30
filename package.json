@@ -1,18 +1,18 @@
 {
-    "name": "sahara-api",
-    "version": "1.0.1",
-    "script": {
-        "start": "node server.js"
-    },
-    "dependencies": {
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
-        "express": "^4.18.2",
-        "jsonwebtoken": "^9.0.0",
-        "mongodb": "^5.0.1",
-        "mongoose": "^6.9.1"
-    },
-    "devDependencies": {
-        "env-cmd": "^10.1.0"
-    }
+  "name": "sahara-api",
+  "version": "1.0.1",
+  "script": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongodb": "^5.0.1",
+    "mongoose": "^6.9.1"
+  },
+  "devDependencies": {
+    "env-cmd": "^10.1.0"
+  }
 }
