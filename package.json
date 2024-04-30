@@ -1,5 +1,5 @@
 {
-    "name": "admin-app-be",
+    "name": "sahara-api",
     "version": "1.0.1",
     "script": {
         "start": "node server.js"
