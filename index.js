@@ -1,128 +1,103 @@
-const mongoose = require("mongoose");
 const express = require("express");
-const app = express();
-const bodyParser = require("body-parser");
-mongoose.set("strictQuery", false);
-const dotenv = require("dotenv");
-
+const http = require("http");
+const { Server } = require("socket.io");
 const cors = require("cors");
-app.use(bodyParser.json());
 
-dotenv.config("./.env");
-
-const corsOptions = {
-  origin: "*",
-};
-app.use(cors(corsOptions));
-const port = process.env.PORT;
-
-const uri =
-  "mongodb+srv://saqebk619:eGLSYh9EjwvJV8pV@cluster12.jdw95pj.mongodb.net/usersApp?retryWrites=true&w=majority";
-// const uri = 'mongodb+srv://<username>:<password>@<cluster-address>/<database-name>?retryWrites=true&w=majority';
-
-mongoose
-  .connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("Connected to MongoDB Atlas");
-  })
-  .catch((err) => {
-    console.log("Error connecting to MongoDB Atlas", err);
-  });
-
-const payHistorySchema = new mongoose.Schema({
-  payMonth: String,
-  payAmount: String,
-  paidDays: String,
-  paymentMode: String,
-  paidTo: String,
-  paidYear: Number
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,
+  },
+  transports: ['websocket', 'polling'],
 });
 
-const mySchema = new mongoose.Schema({
-  id: Number,
-  name: String,
-  fatherName: String,
-  email: String,
-  permanentAddress: String,
-  contactNumber: String,
-  parentsContactNumber: String,
-  emergencyContactNumber: String,
-  saharaHostelNumber: String,
-  placeOfWorkOrStudy: String,
-  dateOfJoining: Date,
-  aadharNumber: String,
-  expectedDateOfLeaving: Date,
-  amountDeposited: String,
-  monthlyRentPayment: String,
-  roomNumber: String,
-  bedNumber: String,
-  permanentAddressPincode: String,
-  bikeRegistrationNumber: String,
-  sharingRoom: String,
-  isApprovedTNC: Boolean,
-  payHistory: [payHistorySchema],
-});
+let rooms = {};
 
-const MyModel = mongoose.model("inmates", mySchema);
+// Middleware
+app.use(cors());
 
-app.get("/allInmates", (req, res) => {
-  MyModel.find({}, (err, data) => {
-    if (err) {
-      res.status(500).send(err);
-      console.log(err, "err");
+// Event listeners for socket connections
+io.on("connection", (socket) => {
+  console.log("New client connected:", socket.id);
+
+  socket.on("createRoom", (room) => {
+    if (!rooms[room]) {
+      rooms[room] = { users: {}, votes: {}, showVotes: false };
+      socket.join(room);
+      socket.emit("roomCreated", room);
     } else {
-      console.log(data, "data");
-      res.send(data);
+      socket.emit("error", "Room already exists");
     }
   });
-});
 
-app.post("/inmates", (req, res) => {
-  let count = 0;
-  app.get("/allInmates", (rq, rqs) => {
-    MyModel.find({}, (er, data) => {
-      if (er) {
-        res.status(500).send(err);
-        console.log(er, "err");
-      } else {
-        count = data.length + 1;
+  socket.on("joinRoom", (room) => {
+    if (rooms[room]) {
+      socket.join(room);
+      socket.emit("roomJoined", room);
+      io.to(room).emit("updateUsers", rooms[room].users);
+    } else {
+      socket.emit("error", "Room does not exist");
+    }
+  });
+
+  socket.on("setName", ({ room, name }) => {
+    if (rooms[room]) {
+      rooms[room].users[socket.id] = name;
+      io.to(room).emit("updateUsers", rooms[room].users);
+    } else {
+      socket.emit("error", "Room does not exist");
+    }
+  });
+
+  socket.on("vote", ({ room, vote }) => {
+    if (rooms[room]) {
+      rooms[room].votes[socket.id] = vote;
+      io.to(room).emit("updateVotes", Object.keys(rooms[room].votes).length);
+    } else {
+      socket.emit("error", "Room does not exist");
+    }
+  });
+
+  socket.on("revealVotes", (room) => {
+    if (rooms[room]) {
+      rooms[room].showVotes = true;
+      const votes = rooms[room].votes;
+      const voteValues = Object.values(votes);
+      const average = voteValues.reduce((a, b) => a + b, 0) / voteValues.length;
+      io.to(room).emit("revealVotes", { votes, average });
+    } else {
+      socket.emit("error", "Room does not exist");
+    }
+  });
+
+  socket.on("clearVotes", (room) => {
+    if (rooms[room]) {
+      rooms[room].votes = {};
+      rooms[room].showVotes = false;
+      io.to(room).emit("updateVotes", 0);
+    } else {
+      socket.emit("error", "Room does not exist");
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+    for (let room in rooms) {
+      if (rooms[room].users[socket.id]) {
+        delete rooms[room].users[socket.id];
+        delete rooms[room].votes[socket.id];
+        io.to(room).emit("updateUsers", rooms[room].users);
+        io.to(room).emit("updateVotes", Object.keys(rooms[room].votes).length);
       }
-    });
-  });
-  const newItem = new MyModel(req.body);
-
-  newItem.save((err) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send({ id: count, ...newItem });
     }
   });
 });
 
-app.put("/inmates/:id", (req, res) => {
-  MyModel.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send(data);
-    }
-  });
-});
-
-app.delete("/inmates/:id", (req, res) => {
-  MyModel.findByIdAndRemove(req.params.id, (err, data) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send({ message: "Item deleted" });
-    }
-  });
-});
-
-app.listen(port, () => {
-  console.log("listening at ", port);
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
